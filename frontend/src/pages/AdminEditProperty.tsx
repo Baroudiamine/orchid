@@ -5,19 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiService } from "@/services/api";
 import {
-  Building,
-  Save,
-  Eye,
-  ArrowLeft,
-  Upload,
-  MapPin,
-  DollarSign,
-  Bed,
-  Bath,
-  Square,
-  Star,
-  Camera,
+  Building, Save, Eye, ArrowLeft,
+  MapPin, DollarSign, Bed, Bath, Square,
   Trash2
 } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
@@ -47,10 +38,8 @@ const AdminEditProperty = () => {
     garden: false,
     pool: false,
     security: false,
-    furnished: false
+    furnished: false,
   });
-  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
-  const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
 
@@ -60,110 +49,65 @@ const AdminEditProperty = () => {
       navigate("/admin");
       return;
     }
-
-    loadPropertyData();
+    if (id) loadPropertyData(id);
   }, [navigate, id]);
 
-  const loadPropertyData = async () => {
+  const loadPropertyData = async (propertyId: string) => {
     setIsLoadingData(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Sample data - in real app, this would come from API
-    const sampleProperties: { [key: string]: any } = {
-      "1": {
-        title: "Villa Luxury Marina",
-        description: "Magnifique villa de luxe située dans le prestigieux quartier de la Marina à Casablanca. Cette propriété exceptionnelle offre une vue imprenable sur l'océan et dispose de finitions haut de gamme.",
-        price: "2500000",
-        location: "Marina",
-        city: "Casablanca",
-        type: "Villa",
-        bedrooms: "5",
-        bathrooms: "4",
-        area: "450",
-        status: "available",
-        featured: true,
-        mainImage: "/api/placeholder/600/400",
-        additionalImages: "/api/placeholder/400/300,/api/placeholder/400/300,/api/placeholder/400/300",
-        amenities: "Climatisation, Chauffage central, Cuisine équipée, Terrasse, Vue sur mer, Garage",
-        yearBuilt: "2020",
-        parking: "3",
-        garden: true,
-        pool: true,
-        security: true,
-        furnished: false
-      },
-      "2": {
-        title: "Penthouse Souissi",
-        description: "Penthouse d'exception dans le quartier résidentiel de Souissi à Rabat. Appartement de standing avec terrasse panoramique et prestations de luxe.",
-        price: "1800000",
-        location: "Souissi",
-        city: "Rabat",
-        type: "Penthouse",
-        bedrooms: "4",
-        bathrooms: "3",
-        area: "320",
-        status: "sold",
-        featured: false,
-        mainImage: "/api/placeholder/600/400",
-        additionalImages: "/api/placeholder/400/300,/api/placeholder/400/300",
-        amenities: "Climatisation, Ascenseur, Terrasse, Parking souterrain",
-        yearBuilt: "2019",
-        parking: "2",
-        garden: false,
-        pool: false,
-        security: true,
-        furnished: true
-      }
-    };
+    try {
+      const property = await apiService.getPropertyById(propertyId);
 
-    const propertyData = sampleProperties[id as string];
-    if (propertyData) {
-      setFormData(propertyData);
-      setMainImagePreview(propertyData.mainImage);
-      
-      // Set additional images previews
-      if (propertyData.additionalImages) {
-        const additionalUrls = propertyData.additionalImages.split(',').filter((url: string) => url.trim());
-        setAdditionalImagePreviews(additionalUrls);
-      }
-    } else {
-      alert("Propriété non trouvée");
+      setFormData({
+        title: property.title,
+        description: property.description,
+        price: property.price.toString(),
+        location: property.location,
+        city: property.city,
+        type: property.type,
+        bedrooms: property.bedrooms.toString(),
+        bathrooms: property.bathrooms.toString(),
+        area: property.area.toString(),
+        status: property.status,
+        featured: property.featured,
+        mainImage: property.mainImage,
+        additionalImages: property.additionalImages.join(", "),
+        amenities: property.amenities.join(", "),
+        yearBuilt: property.yearBuilt?.toString() || "",
+        parking: property.parking?.toString() || "",
+        garden: property.garden,
+        pool: property.pool,
+        security: property.security,
+        furnished: property.furnished,
+      });
+
+      setMainImagePreview(property.mainImage);
+      setAdditionalImagePreviews(property.additionalImages);
+    } catch (error) {
+      console.error("Error loading property:", error);
+      alert(`Erreur lors du chargement de la propriété: ${(error as Error).message}`);
       navigate("/admin/properties");
+    } finally {
+      setIsLoadingData(false);
     }
-    
-    setIsLoadingData(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     if (type === "checkbox") {
-      const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked
-      }));
+      setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
     } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setMainImageFile(file);
-      
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
+      reader.onload = (ev) => {
+        const result = ev.target?.result as string;
         setMainImagePreview(result);
-        setFormData(prev => ({
-          ...prev,
-          mainImage: result
-        }));
+        setFormData(prev => ({ ...prev, mainImage: result }));
       };
       reader.readAsDataURL(file);
     }
@@ -171,91 +115,84 @@ const AdminEditProperty = () => {
 
   const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      setAdditionalImageFiles(prev => [...prev, ...files]);
-      
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          setAdditionalImagePreviews(prev => [...prev, result]);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const result = ev.target?.result as string;
+        setAdditionalImagePreviews(prev => [...prev, result]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const removeAdditionalImage = (index: number) => {
-    setAdditionalImageFiles(prev => prev.filter((_, i) => i !== index));
     setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    console.log("Updated property data:", formData);
-    alert("Propriété mise à jour avec succès !");
-    navigate("/admin/properties");
-    
-    setIsLoading(false);
-  };
-
-  const handleSaveDraft = async () => {
-    setFormData(prev => ({ ...prev, status: "draft" }));
-    setIsLoading(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    alert("Brouillon sauvegardé !");
-    setIsLoading(false);
-  };
-
-  const handleDelete = async () => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette propriété ? Cette action est irréversible.")) {
-      setIsLoading(true);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert("Propriété supprimée avec succès !");
+    try {
+      if (!id) throw new Error("ID de propriété manquant");
+      const updatedProperty = await apiService.updateProperty(id, formData);
+      console.log("Property updated:", updatedProperty);
+      alert("Propriété mise à jour avec succès !");
       navigate("/admin/properties");
+    } catch (error) {
+      console.error("Error updating property:", error);
+      alert(`Erreur lors de la mise à jour: ${(error as Error).message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const propertyTypes = [
-    "Villa",
-    "Penthouse",
-    "Appartement",
-    "Maison",
-    "Studio",
-    "Duplex",
-    "Triplex",
-    "Terrain"
-  ];
+  const handleSaveDraft = async () => {
+    setIsLoading(true);
 
-  const cities = [
-    "Casablanca",
-    "Rabat",
-    "Marrakech",
-    "Fès",
-    "Tanger",
-    "Agadir",
-    "Meknès",
-    "Oujda"
-  ];
+    try {
+      if (!id) {
+        throw new Error("ID de propriété manquant");
+      }
+
+      const draftFormData = { ...formData, status: "draft" };
+      const updatedProperty = await apiService.updateProperty(id, draftFormData);
+      console.log("Draft saved:", updatedProperty);
+
+      setFormData(prev => ({ ...prev, status: "draft" }));
+      alert("Brouillon sauvegardé !");
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      alert(`Erreur lors de la sauvegarde du brouillon: ${(error as Error).message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("Voulez-vous vraiment supprimer cette propriété ?")) {
+      setIsLoading(true);
+      try {
+        if (!id) throw new Error("ID de propriété manquant");
+        await apiService.deleteProperty(id);
+        alert("Propriété supprimée !");
+        navigate("/admin/properties");
+      } catch (error) {
+        console.error("Error deleting property:", error);
+        alert(`Erreur suppression: ${(error as Error).message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const propertyTypes = ["Villa", "Penthouse", "Appartement", "Maison", "Studio", "Duplex", "Triplex", "Terrain"];
+  const cities = ["Casablanca", "Rabat", "Marrakech", "Fès", "Tanger", "Agadir", "Meknès", "Oujda"];
 
   if (isLoadingData) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 luxury-gradient rounded-lg flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <Building className="w-8 h-8 text-white" />
-            </div>
-            <p className="text-foreground font-medium">Chargement de la propriété...</p>
-          </div>
+        <div className="min-h-screen flex items-center justify-center">
+          <p>Chargement de la propriété...</p>
         </div>
       </PageTransition>
     );
@@ -272,26 +209,32 @@ const AdminEditProperty = () => {
                 <Link to="/admin/properties">
                   <Button variant="outline" size="sm">
                     <ArrowLeft className="w-4 h-4 mr-2" />
-                    Retour aux propriétés
+                    Retour
                   </Button>
                 </Link>
                 <div>
                   <h1 className="text-2xl font-bold text-foreground">Modifier la Propriété</h1>
-                  <p className="text-sm text-muted-foreground">ID: {id}</p>
+                  <p className="text-sm text-muted-foreground">Mettre à jour les informations de la propriété</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Supprimer
+              <div className="flex items-center space-x-3">
+                <Button
+                  onClick={handleSaveDraft}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Sauvegarder le brouillon</span>
                 </Button>
-                <Button variant="outline" onClick={handleSaveDraft} disabled={isLoading}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Sauvegarder brouillon
-                </Button>
-                <Button variant="luxury" form="property-form" type="submit" disabled={isLoading}>
-                  <Building className="w-4 h-4 mr-2" />
-                  {isLoading ? "Mise à jour..." : "Mettre à jour"}
+                <Button
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  variant="destructive"
+                  className="flex items-center space-x-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Supprimer</span>
                 </Button>
               </div>
             </div>
@@ -299,452 +242,175 @@ const AdminEditProperty = () => {
         </header>
 
         <main className="container mx-auto px-6 py-8">
-          <form id="property-form" onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Basic Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Building className="w-5 h-5" />
-                    <span>Informations de base</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Titre de la propriété *
-                    </label>
-                    <Input
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      placeholder="Ex: Villa Luxury Marina avec vue sur mer"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Main Form */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Basic Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Building className="w-5 h-5" />
+                      <span>Informations de Base</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
-                        Type de propriété *
-                      </label>
-                      <select
-                        name="type"
-                        value={formData.type}
-                        onChange={handleInputChange}
-                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                        required
-                      >
-                        <option value="">Sélectionner un type</option>
-                        {propertyTypes.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Prix (MAD) *
+                        Titre de la propriété *
                       </label>
                       <Input
-                        name="price"
-                        value={formData.price}
-                        onChange={handleInputChange}
-                        placeholder="2500000"
-                        type="number"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Description *
-                    </label>
-                    <Textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      placeholder="Description détaillée de la propriété..."
-                      rows={6}
-                      required
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Location */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <MapPin className="w-5 h-5" />
-                    <span>Localisation</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Ville *
-                      </label>
-                      <select
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                        required
-                      >
-                        <option value="">Sélectionner une ville</option>
-                        {cities.map((city) => (
-                          <option key={city} value={city}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Quartier/Zone *
-                      </label>
-                      <Input
-                        name="location"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                        placeholder="Ex: Marina, Souissi, Hivernage"
-                        required
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Property Details */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Square className="w-5 h-5" />
-                    <span>Détails de la propriété</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Chambres *
-                      </label>
-                      <Input
-                        name="bedrooms"
-                        value={formData.bedrooms}
-                        onChange={handleInputChange}
-                        placeholder="3"
-                        type="number"
-                        min="0"
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                        placeholder="Ex: Villa Luxury Marina"
                         required
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
-                        Salles de bain *
+                        Description *
                       </label>
-                      <Input
-                        name="bathrooms"
-                        value={formData.bathrooms}
-                        onChange={handleInputChange}
-                        placeholder="2"
-                        type="number"
-                        min="0"
+                      <Textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Description détaillée de la propriété..."
+                        rows={4}
                         required
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Surface (m²) *
-                      </label>
-                      <Input
-                        name="area"
-                        value={formData.area}
-                        onChange={handleInputChange}
-                        placeholder="180"
-                        type="number"
-                        min="0"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Année de construction
-                      </label>
-                      <Input
-                        name="yearBuilt"
-                        value={formData.yearBuilt}
-                        onChange={handleInputChange}
-                        placeholder="2020"
-                        type="number"
-                        min="1900"
-                        max={new Date().getFullYear()}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Places de parking
-                      </label>
-                      <Input
-                        name="parking"
-                        value={formData.parking}
-                        onChange={handleInputChange}
-                        placeholder="2"
-                        type="number"
-                        min="0"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Équipements
-                    </label>
-                    <Textarea
-                      name="amenities"
-                      value={formData.amenities}
-                      onChange={handleInputChange}
-                      placeholder="Climatisation, Chauffage central, Cuisine équipée..."
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Images */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Camera className="w-5 h-5" />
-                    <span>Images</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Main Image */}
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Image principale *
-                    </label>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleMainImageChange}
-                          className="hidden"
-                          id="main-image-upload"
-                        />
-                        <label
-                          htmlFor="main-image-upload"
-                          className="cursor-pointer inline-flex items-center px-4 py-2 border border-input rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Changer image principale
-                        </label>
-                        {mainImageFile && (
-                          <span className="text-sm text-muted-foreground">
-                            {mainImageFile.name}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="border-t pt-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
                         <label className="block text-sm font-medium text-foreground mb-2">
-                          Ou modifier l'URL d'image
+                          Prix (MAD) *
                         </label>
-                        <Input
-                          name="mainImage"
-                          value={formData.mainImage}
-                          onChange={handleInputChange}
-                          placeholder="https://exemple.com/image.jpg"
-                        />
-                      </div>
-                    </div>
-
-                    {(mainImagePreview || formData.mainImage) && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-foreground mb-2">Image principale actuelle:</p>
-                        <img
-                          src={mainImagePreview || formData.mainImage}
-                          alt="Aperçu"
-                          className="w-full h-48 object-cover rounded-lg border"
-                          onError={(e) => {
-                            e.currentTarget.src = "/api/placeholder/600/400";
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Additional Images */}
-                  <div className="border-t pt-4">
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Images supplémentaires
-                    </label>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          onChange={handleAdditionalImagesChange}
-                          className="hidden"
-                          id="additional-images-upload"
-                        />
-                        <label
-                          htmlFor="additional-images-upload"
-                          className="cursor-pointer inline-flex items-center px-4 py-2 border border-input rounded-md bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Ajouter des images
-                        </label>
-                        <span className="text-sm text-muted-foreground">
-                          {additionalImageFiles.length} nouvelle(s) image(s) sélectionnée(s)
-                        </span>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            value={formData.price}
+                            onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                            placeholder="2500000"
+                            className="pl-10"
+                            required
+                          />
+                        </div>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">
-                          Ou modifier les URLs d'images
+                          Type de propriété *
                         </label>
-                        <Textarea
-                          name="additionalImages"
-                          value={formData.additionalImages}
-                          onChange={handleInputChange}
-                          placeholder="URLs des images séparées par des virgules"
-                          rows={3}
-                        />
+                        <select
+                          value={formData.type}
+                          onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+                          className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                          required
+                        >
+                          <option value="">Sélectionner un type</option>
+                          {propertyTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Localisation *
+                        </label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="text"
+                            value={formData.location}
+                            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                            placeholder="Ex: Marina"
+                            className="pl-10"
+                            required
+                          />
+                        </div>
                       </div>
 
-                      {/* Additional Images Preview */}
-                      {additionalImagePreviews.length > 0 && (
-                        <div>
-                          <p className="text-sm font-medium text-foreground mb-2">Images supplémentaires:</p>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {additionalImagePreviews.map((preview, index) => (
-                              <div key={index} className="relative">
-                                <img
-                                  src={preview}
-                                  alt={`Aperçu ${index + 1}`}
-                                  className="w-full h-32 object-cover rounded-lg border"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => removeAdditionalImage(index)}
-                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Ville *
+                        </label>
+                        <select
+                          value={formData.city}
+                          onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                          className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                          required
+                        >
+                          <option value="">Sélectionner une ville</option>
+                          {cities.map(city => (
+                            <option key={city} value={city}>{city}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Status & Features */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Star className="w-5 h-5" />
-                    <span>Statut & Options</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Statut de la propriété
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                    >
-                      <option value="available">Disponible</option>
-                      <option value="sold">Vendu</option>
-                      <option value="pending">En attente</option>
-                      <option value="draft">Brouillon</option>
-                    </select>
-                  </div>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Chambres *
+                        </label>
+                        <div className="relative">
+                          <Bed className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            value={formData.bedrooms}
+                            onChange={(e) => setFormData(prev => ({ ...prev, bedrooms: e.target.value }))}
+                            placeholder="3"
+                            className="pl-10"
+                            min="0"
+                            required
+                          />
+                        </div>
+                      </div>
 
-                  <div className="space-y-3">
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        name="featured"
-                        checked={formData.featured}
-                        onChange={handleInputChange}
-                        className="rounded border-input"
-                      />
-                      <span className="text-sm font-medium">Propriété vedette</span>
-                    </label>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Salles de bain *
+                        </label>
+                        <div className="relative">
+                          <Bath className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            value={formData.bathrooms}
+                            onChange={(e) => setFormData(prev => ({ ...prev, bathrooms: e.target.value }))}
+                            placeholder="2"
+                            className="pl-10"
+                            min="0"
+                            required
+                          />
+                        </div>
+                      </div>
 
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        name="garden"
-                        checked={formData.garden}
-                        onChange={handleInputChange}
-                        className="rounded border-input"
-                      />
-                      <span className="text-sm font-medium">Jardin</span>
-                    </label>
-
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        name="pool"
-                        checked={formData.pool}
-                        onChange={handleInputChange}
-                        className="rounded border-input"
-                      />
-                      <span className="text-sm font-medium">Piscine</span>
-                    </label>
-
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        name="security"
-                        checked={formData.security}
-                        onChange={handleInputChange}
-                        className="rounded border-input"
-                      />
-                      <span className="text-sm font-medium">Sécurité 24h/24</span>
-                    </label>
-
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        name="furnished"
-                        checked={formData.furnished}
-                        onChange={handleInputChange}
-                        className="rounded border-input"
-                      />
-                      <span className="text-sm font-medium">Meublé</span>
-                    </label>
-                  </div>
-                </CardContent>
-              </Card>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Surface (m²) *
+                        </label>
+                        <div className="relative">
+                          <Square className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            value={formData.area}
+                            onChange={(e) => setFormData(prev => ({ ...prev, area: e.target.value }))}
+                            placeholder="200"
+                            className="pl-10"
+                            min="0"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Preview */}
               <Card>
@@ -765,7 +431,7 @@ const AdminEditProperty = () => {
                     <div className="flex items-center space-x-1 text-muted-foreground">
                       <MapPin className="w-4 h-4" />
                       <span className="text-sm">
-                        {formData.location && formData.city 
+                        {formData.location && formData.city
                           ? `${formData.location}, ${formData.city}`
                           : "Localisation"}
                       </span>
@@ -793,6 +459,36 @@ const AdminEditProperty = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/admin/properties")}
+                disabled={isLoading}
+              >
+                Annuler
+              </Button>
+              <Button
+                type="submit"
+                variant="luxury"
+                disabled={isLoading}
+                className="flex items-center space-x-2"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Mise à jour...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Mettre à jour la propriété</span>
+                  </>
+                )}
+              </Button>
             </div>
           </form>
         </main>

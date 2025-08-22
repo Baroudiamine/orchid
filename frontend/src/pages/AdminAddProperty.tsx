@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiService, PropertyFormData } from "@/services/api";
 import {
   Building,
   Save,
@@ -117,26 +118,36 @@ const AdminAddProperty = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const createdProperty = await apiService.createProperty(formData);
+      console.log("Property created:", createdProperty);
 
-    console.log("Property data:", formData);
-    
-    // Here you would typically send the data to your backend
-    alert("Propriété créée avec succès !");
-    navigate("/admin/properties");
-    
-    setIsLoading(false);
+      alert("Propriété créée avec succès !");
+      navigate("/admin/properties");
+    } catch (error) {
+      console.error("Error creating property:", error);
+      alert(`Erreur lors de la création de la propriété: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveDraft = async () => {
-    setFormData(prev => ({ ...prev, status: "draft" }));
     setIsLoading(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    alert("Brouillon sauvegardé !");
-    setIsLoading(false);
+
+    try {
+      const savedProperty = await apiService.createPropertyDraft(formData);
+      console.log("Draft saved:", savedProperty);
+
+      // Update form data to reflect the draft status
+      setFormData(prev => ({ ...prev, status: "draft" }));
+      alert("Brouillon sauvegardé !");
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      alert(`Erreur lors de la sauvegarde du brouillon: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const propertyTypes = [

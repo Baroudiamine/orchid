@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiService, ArticleFormData } from "@/services/api";
 import {
   FileText,
   Save,
@@ -24,7 +25,7 @@ const AdminEditArticle = () => {
   const { id } = useParams();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ArticleFormData>({
     title: "",
     excerpt: "",
     content: "",
@@ -32,7 +33,8 @@ const AdminEditArticle = () => {
     category: "",
     tags: "",
     status: "draft",
-    featuredImage: ""
+    featured: false,
+    image: ""
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -49,55 +51,35 @@ const AdminEditArticle = () => {
   }, [navigate, id]);
 
   const loadArticleData = async () => {
-    setIsLoadingData(true);
-    
-    // Simulate API call to load article data
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Sample data - in real app, this would come from API
-    const sampleArticles: { [key: string]: any } = {
-      "1": {
-        title: "Luxury Real Estate Market Trends 2024",
-        excerpt: "Discover the latest trends shaping the luxury real estate market and what investors should know.",
-        content: `<p>The luxury real estate market in 2024 is experiencing unprecedented growth, driven by evolving buyer preferences and global economic shifts.</p>
-        
-        <h2>Market Overview</h2>
-        <p>The global luxury real estate market has shown remarkable resilience, with prime properties in key markets appreciating by an average of 8-12% year-over-year.</p>
-        
-        <h2>Key Trends Driving Growth</h2>
-        <h3>1. Sustainable Luxury</h3>
-        <p>Environmental consciousness is no longer optional in luxury real estate. High-net-worth individuals are increasingly seeking properties that combine opulence with sustainability.</p>`,
-        author: "Sarah Johnson",
-        category: "Market Analysis",
-        tags: "Market Analysis, Investment, Luxury Properties, 2024 Trends",
-        status: "published",
-        featuredImage: "/api/placeholder/800/400"
-      },
-      "2": {
-        title: "Investment Strategies for Premium Properties",
-        excerpt: "Learn proven strategies for maximizing returns on luxury property investments.",
-        content: `<p>Investing in premium properties requires a sophisticated approach that goes beyond traditional real estate investment strategies.</p>
-        
-        <h2>Understanding Premium Property Investment</h2>
-        <p>Premium property investment differs significantly from conventional real estate investing.</p>`,
-        author: "Michael Chen",
-        category: "Investment",
-        tags: "Investment Strategy, Premium Properties, Portfolio Management",
-        status: "published",
-        featuredImage: "/api/placeholder/800/400"
-      }
-    };
-
-    const articleData = sampleArticles[id as string];
-    if (articleData) {
-      setFormData(articleData);
-      setImagePreview(articleData.featuredImage);
-    } else {
-      alert("Article non trouvé");
+    if (!id) {
       navigate("/admin/articles");
+      return;
     }
-    
-    setIsLoadingData(false);
+
+    setIsLoadingData(true);
+    try {
+      const article = await apiService.getArticleById(id);
+
+      setFormData({
+        title: article.title,
+        excerpt: article.excerpt,
+        content: article.content,
+        author: article.author,
+        category: article.category,
+        tags: article.tags.join(', '),
+        status: article.status,
+        featured: article.featured,
+        image: article.image
+      });
+
+      setImagePreview(article.image);
+    } catch (error) {
+      console.error("Error loading article:", error);
+      alert(`Erreur lors du chargement de l'article: ${(error as Error).message}`);
+      navigate("/admin/articles");
+    } finally {
+      setIsLoadingData(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -119,7 +101,7 @@ const AdminEditArticle = () => {
         setImagePreview(result);
         setFormData(prev => ({
           ...prev,
-          featuredImage: result
+          image: result
         }));
       };
       reader.readAsDataURL(file);
@@ -128,35 +110,60 @@ const AdminEditArticle = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!id) return;
+
     setIsLoading(true);
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const updatedData = { ...formData, status: "published" };
+      await apiService.updateArticle(id, updatedData);
 
-    console.log("Updated article data:", formData);
-    alert("Article mis à jour avec succès !");
-    navigate("/admin/articles");
-    
-    setIsLoading(false);
+      alert("Article mis à jour avec succès !");
+      navigate("/admin/articles");
+
+    } catch (error) {
+      console.error("Error updating article:", error);
+      alert(`Erreur lors de la mise à jour de l'article: ${(error as Error).message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveDraft = async () => {
-    setFormData(prev => ({ ...prev, status: "draft" }));
+    if (!id) return;
+
     setIsLoading(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    alert("Brouillon sauvegardé !");
-    setIsLoading(false);
+
+    try {
+      const draftData = { ...formData, status: "draft" };
+      await apiService.updateArticle(id, draftData);
+
+      alert("Brouillon sauvegardé !");
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      alert(`Erreur lors de la sauvegarde du brouillon: ${(error as Error).message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDelete = async () => {
+    if (!id) return;
+
     if (window.confirm("Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible.")) {
       setIsLoading(true);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert("Article supprimé avec succès !");
-      navigate("/admin/articles");
+
+      try {
+        await apiService.deleteArticle(id);
+
+        alert("Article supprimé avec succès !");
+        navigate("/admin/articles");
+      } catch (error) {
+        console.error("Error deleting article:", error);
+        alert(`Erreur lors de la suppression de l'article: ${(error as Error).message}`);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -326,19 +333,19 @@ const AdminEditArticle = () => {
                         Ou modifier l'URL d'image
                       </label>
                       <Input
-                        name="featuredImage"
-                        value={formData.featuredImage}
+                        name="image"
+                        value={formData.image}
                         onChange={handleInputChange}
                         placeholder="https://exemple.com/image.jpg"
                       />
                     </div>
                   </div>
 
-                  {(imagePreview || formData.featuredImage) && (
+                  {(imagePreview || formData.image) && (
                     <div className="mt-4">
                       <p className="text-sm font-medium text-foreground mb-2">Aperçu actuel:</p>
                       <img
-                        src={imagePreview || formData.featuredImage}
+                        src={imagePreview || formData.image}
                         alt="Aperçu"
                         className="w-full h-48 object-cover rounded-lg border"
                         onError={(e) => {
@@ -423,6 +430,24 @@ const AdminEditArticle = () => {
                       <option value="draft">Brouillon</option>
                       <option value="published">Publié</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="featured"
+                        checked={formData.featured}
+                        onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
+                        className="rounded border-input"
+                      />
+                      <span className="text-sm font-medium text-foreground">
+                        ⭐ Article mis en avant (Featured)
+                      </span>
+                    </label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Les articles mis en avant apparaissent en première position sur le blog
+                    </p>
                   </div>
                 </CardContent>
               </Card>

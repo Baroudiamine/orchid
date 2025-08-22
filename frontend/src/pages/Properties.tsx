@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiService, Property } from "@/services/api";
 import {
   MapPin,
   Bed,
@@ -18,20 +19,37 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
-import { properties as allPropertiesData } from "@/data/properties";
 
 const PropertiesPage = () => {
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const allProperties = allPropertiesData.map(property => ({
-    ...property,
-    image: property.image || property.images?.[0] || ""
-  }));
+  useEffect(() => {
+    loadProperties();
+  }, []);
 
-  const toggleFavorite = (propertyId: number) => {
+  const loadProperties = async () => {
+    setIsLoading(true);
+    try {
+      const propertiesData = await apiService.getAllProperties();
+      // Filtrer seulement les propriétés disponibles pour le public
+      const availableProperties = propertiesData.filter(property =>
+        property.status === 'available' || property.status === 'sold'
+      );
+      setProperties(availableProperties);
+    } catch (error) {
+      console.error("Error loading properties:", error);
+      // En cas d'erreur, on peut afficher un message ou utiliser des données par défaut
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleFavorite = (propertyId: string) => {
     setFavorites(prev =>
       prev.includes(propertyId)
         ? prev.filter(id => id !== propertyId)
@@ -39,21 +57,20 @@ const PropertiesPage = () => {
     );
   };
 
-  const formatPrice = (price: number, currency: string) => {
+  const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-MA', {
-      style: 'currency',
-      currency: currency === 'MAD' ? 'MAD' : 'EUR',
+      style: 'decimal',
       minimumFractionDigits: 0,
-    }).format(price);
+    }).format(price) + ' MAD';
   };
 
   // Filter properties based on search and filters
-  const filteredProperties = allProperties.filter(property => {
-    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = filterType === "all" || property.type === filterType;
-    
+  const filteredProperties = properties.filter(property => {
+    const searchText = `${property.title} ${property.location} ${property.city}`.toLowerCase();
+    const matchesSearch = searchText.includes(searchTerm.toLowerCase());
+
+    const matchesType = filterType === "all" || property.type.toLowerCase() === filterType.toLowerCase();
+
     const matchesPrice = (() => {
       switch (priceRange) {
         case "0-5M": return property.price <= 5000000;
@@ -87,6 +104,21 @@ const PropertiesPage = () => {
               </div>
             </div>
           </section>
+
+          {isLoading ? (
+            <section className="py-20">
+              <div className="container mx-auto px-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 luxury-gradient rounded-lg flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <Building className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-foreground mb-2">Chargement des propriétés...</h2>
+                  <p className="text-muted-foreground">Veuillez patienter</p>
+                </div>
+              </div>
+            </section>
+          ) : (
+            <>
 
           {/* Filters Section */}
           <section className="py-12 bg-background border-b">
@@ -148,16 +180,16 @@ const PropertiesPage = () => {
             <div className="container mx-auto px-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredProperties.map((property) => (
-                  <Card key={property.id} className="group overflow-hidden hover:shadow-luxury transition-all duration-500">
+                  <Card key={property._id} className="group overflow-hidden hover:shadow-luxury transition-all duration-500">
                     <div className="relative">
                       {/* Property Image */}
                       <div className="relative h-64 overflow-hidden">
                         <img
-                          src={property.image}
+                          src={property.mainImage || "/api/placeholder/400/300"}
                           alt={property.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        
+
                         {/* Featured Badge */}
                         {property.featured && (
                           <div className="absolute top-4 left-4">
@@ -170,21 +202,21 @@ const PropertiesPage = () => {
 
                         {/* Favorite Button */}
                         <button
-                          onClick={() => toggleFavorite(property.id)}
+                          onClick={() => toggleFavorite(property._id)}
                           className="absolute top-4 right-4 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-colors"
                         >
-                          <Heart 
+                          <Heart
                             className={`w-5 h-5 ${
-                              favorites.includes(property.id) 
-                                ? 'fill-red-500 text-red-500' 
+                              favorites.includes(property._id)
+                                ? 'fill-red-500 text-red-500'
                                 : 'text-gray-600'
-                            }`} 
+                            }`}
                           />
                         </button>
 
                         {/* Quick View Button */}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <Link to={`/properties/${property.id}`}>
+                          <Link to={`/properties/${property._id}`}>
                             <Button variant="secondary" size="sm" className="bg-white/90 text-foreground hover:bg-white">
                               <Eye className="w-4 h-4 mr-2" />
                               Voir les détails
@@ -209,7 +241,7 @@ const PropertiesPage = () => {
                         </h3>
                         <div className="flex items-center text-muted-foreground mb-3">
                           <MapPin className="w-4 h-4 mr-1" />
-                          <span className="text-sm">{property.location}</span>
+                          <span className="text-sm">{property.location}, {property.city}</span>
                         </div>
                         <p className="text-muted-foreground text-sm leading-relaxed">
                           {property.description}
@@ -253,14 +285,14 @@ const PropertiesPage = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-2xl font-bold text-primary">
-                            {formatPrice(property.price, property.currency)}
+                            {formatPrice(property.price)}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            Construit en {property.yearBuilt}
+                            {property.yearBuilt && `Construit en ${property.yearBuilt}`}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Link to={`/properties/${property.id}`}>
+                          <Link to={`/properties/${property._id}`}>
                             <Button variant="luxury" size="sm">
                               <ArrowRight className="w-4 h-4" />
                             </Button>
@@ -286,6 +318,8 @@ const PropertiesPage = () => {
               )}
             </div>
           </section>
+          </>
+          )}
         </main>
         <Footer />
       </div>

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiService, ArticleFormData } from "@/services/api";
 import {
   FileText,
   Save,
@@ -22,7 +23,7 @@ import { showToast } from "@/components/ToastContainer";
 const AdminAddArticle = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ArticleFormData>({
     title: "",
     excerpt: "",
     content: "",
@@ -30,7 +31,8 @@ const AdminAddArticle = () => {
     category: "",
     tags: "",
     status: "draft",
-    featuredImage: ""
+    featured: false,
+    image: ""
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -62,7 +64,7 @@ const AdminAddArticle = () => {
         setImagePreview(result);
         setFormData(prev => ({
           ...prev,
-          featuredImage: result
+          image: result
         }));
       };
       reader.readAsDataURL(file);
@@ -73,38 +75,72 @@ const AdminAddArticle = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const articleData = { ...formData, status: "published" };
+      await apiService.createArticle(articleData);
 
-    console.log("Article data:", formData);
+      showToast({
+        type: "success",
+        title: "Article publié !",
+        message: "L'article a été publié avec succès.",
+        duration: 3000
+      });
 
-    // Here you would typically send the data to your backend
-    showToast({
-      type: "success",
-      title: "Article créé",
-      message: "L'article a été créé avec succès !",
-      duration: 3000
-    });
+      // Reset form
+      setFormData({
+        title: "",
+        excerpt: "",
+        content: "",
+        author: "",
+        category: "",
+        tags: "",
+        status: "draft",
+        featured: false,
+        image: ""
+      });
+      setImagePreview("");
+      setImageFile(null);
 
-    navigate("/admin/articles");
-    
-    setIsLoading(false);
+      navigate("/admin/articles");
+
+    } catch (error) {
+      console.error("Error creating article:", error);
+      showToast({
+        type: "error",
+        title: "Erreur",
+        message: `Erreur lors de la création de l'article: ${(error as Error).message}`
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSaveDraft = async () => {
-    setFormData(prev => ({ ...prev, status: "draft" }));
     setIsLoading(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    showToast({
-      type: "info",
-      title: "Brouillon sauvegardé",
-      message: "Votre brouillon a été sauvegardé avec succès",
-      duration: 3000
-    });
+    try {
+      const draftData = { ...formData, status: "draft" };
+      await apiService.createArticleDraft(draftData);
 
-    setIsLoading(false);
+      showToast({
+        type: "info",
+        title: "Brouillon sauvegardé",
+        message: "Votre brouillon a été sauvegardé avec succès",
+        duration: 3000
+      });
+
+      navigate("/admin/articles");
+
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      showToast({
+        type: "error",
+        title: "Erreur",
+        message: `Erreur lors de la sauvegarde du brouillon: ${(error as Error).message}`
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const categories = [
@@ -258,19 +294,19 @@ const AdminAddArticle = () => {
                         Ou utiliser une URL d'image
                       </label>
                       <Input
-                        name="featuredImage"
-                        value={formData.featuredImage}
+                        name="image"
+                        value={formData.image}
                         onChange={handleInputChange}
                         placeholder="https://exemple.com/image.jpg"
                       />
                     </div>
                   </div>
 
-                  {(imagePreview || formData.featuredImage) && (
+                  {(imagePreview || formData.image) && (
                     <div className="mt-4">
                       <p className="text-sm font-medium text-foreground mb-2">Aperçu:</p>
                       <img
-                        src={imagePreview || formData.featuredImage}
+                        src={imagePreview || formData.image}
                         alt="Aperçu"
                         className="w-full h-48 object-cover rounded-lg border"
                         onError={(e) => {
@@ -355,6 +391,24 @@ const AdminAddArticle = () => {
                       <option value="draft">Brouillon</option>
                       <option value="published">Publié</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="featured"
+                        checked={formData.featured}
+                        onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
+                        className="rounded border-input"
+                      />
+                      <span className="text-sm font-medium text-foreground">
+                        ⭐ Article mis en avant (Featured)
+                      </span>
+                    </label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Les articles mis en avant apparaissent en première position sur le blog
+                    </p>
                   </div>
                 </CardContent>
               </Card>

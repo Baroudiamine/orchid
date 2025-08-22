@@ -1,0 +1,32 @@
+{
+  "title": "Villa Test pour Modification",
+  "description": "Cette propriété a été créée pour tester la fonctionnalité de modification. Vous pouvez la modifier et la supprimer en toute sécurité.",
+  "price": 2500000,
+  "location": "Marina",
+  "city": "Casablanca",
+  "type": "Villa",
+  "bedrooms": 4,
+  "bathrooms": 3,
+  "area": 350,
+  "status": "available",
+  "featured": true,
+  "mainImage": "https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=Villa+Test",
+  "additionalImages": [
+    "https://via.placeholder.com/600x400/4F46E5/FFFFFF?text=Image+2",
+    "https://via.placeholder.com/600x400/4F46E5/FFFFFF?text=Image+3"
+  ],
+  "amenities": [
+    "Climatisation",
+    "Chauffage central",
+    "Cuisine équipée",
+    "Terrasse",
+    "Vue sur mer",
+    "Garage"
+  ],
+  "yearBuilt": 2022,
+  "parking": "3 places",
+  "garden": true,
+  "pool": true,
+  "security": true,
+  "furnished": false
+}

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiService, Property } from "@/services/api";
 import {
   Building,
   Plus,
@@ -25,73 +26,49 @@ const AdminProperties = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
     if (!isLoggedIn || isLoggedIn !== "true") {
       navigate("/admin");
+      return;
     }
+
+    loadProperties();
   }, [navigate]);
 
-  // Sample properties data
-  const [properties] = useState([
-    {
-      id: 1,
-      title: "Villa Luxury Marina",
-      type: "Villa",
-      price: "2,500,000",
-      location: "Marina, Casablanca",
-      bedrooms: 5,
-      bathrooms: 4,
-      area: 450,
-      status: "available",
-      image: "/api/placeholder/300/200",
-      featured: true
-    },
-    {
-      id: 2,
-      title: "Penthouse Souissi",
-      type: "Penthouse",
-      price: "1,800,000",
-      location: "Souissi, Rabat",
-      bedrooms: 4,
-      bathrooms: 3,
-      area: 320,
-      status: "sold",
-      image: "/api/placeholder/300/200",
-      featured: false
-    },
-    {
-      id: 3,
-      title: "Appartement Hivernage",
-      type: "Appartement",
-      price: "950,000",
-      location: "Hivernage, Marrakech",
-      bedrooms: 3,
-      bathrooms: 2,
-      area: 180,
-      status: "available",
-      image: "/api/placeholder/300/200",
-      featured: true
-    },
-    {
-      id: 4,
-      title: "Villa Palmeraie",
-      type: "Villa",
-      price: "3,200,000",
-      location: "Palmeraie, Marrakech",
-      bedrooms: 6,
-      bathrooms: 5,
-      area: 600,
-      status: "pending",
-      image: "/api/placeholder/300/200",
-      featured: false
+  const loadProperties = async () => {
+    setIsLoading(true);
+    try {
+      const propertiesData = await apiService.getAllProperties();
+      setProperties(propertiesData);
+      console.log("Propriétés chargées:", propertiesData.map(p => ({ id: p._id, title: p.title })));
+    } catch (error) {
+      console.error("Error loading properties:", error);
+      alert(`Erreur lors du chargement des propriétés: ${(error as Error).message}`);
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  };
+
+  const handleDeleteProperty = async (propertyId: string) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette propriété ? Cette action est irréversible.")) {
+      try {
+        await apiService.deleteProperty(propertyId);
+        alert("Propriété supprimée avec succès !");
+        loadProperties(); // Recharger la liste
+      } catch (error) {
+        console.error("Error deleting property:", error);
+        alert(`Erreur lors de la suppression de la propriété: ${error.message}`);
+      }
+    }
+  };
 
   const filteredProperties = properties.filter(property => {
-    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchText = `${property.title} ${property.location} ${property.city}`.toLowerCase();
+    const matchesSearch = searchText.includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === "all" || property.type.toLowerCase() === filterType.toLowerCase();
     return matchesSearch && matchesFilter;
   });
@@ -115,6 +92,22 @@ const AdminProperties = () => {
       // Handle delete logic here
     }
   };
+
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 luxury-gradient rounded-lg flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <Building className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Chargement des propriétés...</h2>
+            <p className="text-muted-foreground">Veuillez patienter</p>
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>
@@ -181,10 +174,10 @@ const AdminProperties = () => {
           {/* Properties Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProperties.map((property) => (
-              <Card key={property.id} className="hover:shadow-luxury transition-all duration-300 overflow-hidden">
+              <Card key={property._id} className="hover:shadow-luxury transition-all duration-300 overflow-hidden">
                 <div className="relative">
                   <img
-                    src={property.image}
+                    src={property.mainImage || "/api/placeholder/300/200"}
                     alt={property.title}
                     className="w-full h-48 object-cover"
                   />
@@ -197,20 +190,20 @@ const AdminProperties = () => {
                     {getStatusBadge(property.status)}
                   </div>
                 </div>
-                
+
                 <CardContent className="p-4">
                   <h3 className="text-lg font-bold text-foreground mb-2">{property.title}</h3>
-                  
+
                   <div className="flex items-center space-x-1 text-muted-foreground mb-2">
                     <MapPin className="w-4 h-4" />
-                    <span className="text-sm">{property.location}</span>
+                    <span className="text-sm">{property.location}, {property.city}</span>
                   </div>
-                  
+
                   <div className="flex items-center space-x-1 text-primary mb-3">
                     <DollarSign className="w-4 h-4" />
-                    <span className="text-lg font-bold">{property.price} MAD</span>
+                    <span className="text-lg font-bold">{property.price.toLocaleString()} MAD</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                     <div className="flex items-center space-x-1">
                       <Bed className="w-4 h-4" />
@@ -227,7 +220,7 @@ const AdminProperties = () => {
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    <Link to={`/admin/properties/edit/${property.id}`} className="flex-1">
+                    <Link to={`/admin/properties/edit/${property._id}`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full">
                         <Edit className="w-4 h-4 mr-2" />
                         Modifier
@@ -236,7 +229,7 @@ const AdminProperties = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDelete(property.id)}
+                      onClick={() => handleDeleteProperty(property._id)}
                       className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="w-4 h-4" />

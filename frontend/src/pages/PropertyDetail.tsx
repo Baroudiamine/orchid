@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiService, Property } from "@/services/api";
 import {
   MapPin,
   Bed,
@@ -28,16 +29,45 @@ import {
   ChevronRight
 } from "lucide-react";
 import "../styles/slider.css";
-import { properties } from "@/data/properties";
-
-// Property data imported from centralized data file
-
-
 const PropertyDetail = () => {
   const { id } = useParams();
-  const property = properties.find(p => p.id === parseInt(id || "1"));
+  const [property, setProperty] = useState<Property | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      loadProperty(id);
+    }
+  }, [id]);
+
+  const loadProperty = async (propertyId: string) => {
+    setIsLoading(true);
+    try {
+      const propertyData = await apiService.getPropertyById(propertyId);
+      setProperty(propertyData);
+    } catch (error) {
+      console.error("Error loading property:", error);
+      setProperty(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 luxury-gradient rounded-lg flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Building className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Chargement de la propriété...</h2>
+          <p className="text-muted-foreground">Veuillez patienter</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!property) {
     return (
@@ -52,12 +82,15 @@ const PropertyDetail = () => {
     );
   }
 
+  // Créer un tableau d'images à partir de mainImage et additionalImages
+  const allImages = [property.mainImage, ...property.additionalImages].filter(Boolean);
+
   const nextImage = () => {
-    if (property && !isTransitioning) {
+    if (allImages.length > 0 && !isTransitioning) {
       setIsTransitioning(true);
       setTimeout(() => {
         setCurrentImageIndex((prev) =>
-          prev === property.images.length - 1 ? 0 : prev + 1
+          prev === allImages.length - 1 ? 0 : prev + 1
         );
         setIsTransitioning(false);
       }, 100);
@@ -65,11 +98,11 @@ const PropertyDetail = () => {
   };
 
   const prevImage = () => {
-    if (property && !isTransitioning) {
+    if (allImages.length > 0 && !isTransitioning) {
       setIsTransitioning(true);
       setTimeout(() => {
         setCurrentImageIndex((prev) =>
-          prev === 0 ? property.images.length - 1 : prev - 1
+          prev === 0 ? allImages.length - 1 : prev - 1
         );
         setIsTransitioning(false);
       }, 100);
@@ -100,12 +133,11 @@ const PropertyDetail = () => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [property]);
 
-  const formatPrice = (price: number, currency: string) => {
+  const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-MA', {
-      style: 'currency',
-      currency: currency === 'MAD' ? 'MAD' : 'EUR',
+      style: 'decimal',
       minimumFractionDigits: 0,
-    }).format(price);
+    }).format(price) + ' MAD';
   };
 
   return (
@@ -129,7 +161,7 @@ const PropertyDetail = () => {
             <div className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden shadow-luxury mb-8 group hover:shadow-luxury-hover smooth-transition-slow">
               {/* Image Container with Smooth Transitions */}
               <div className="relative w-full h-full">
-                {property.images.map((image, index) => (
+                {allImages.map((image, index) => (
                   <div
                     key={index}
                     className={`absolute inset-0 transition-all duration-1000 ease-out transform ${
@@ -144,7 +176,7 @@ const PropertyDetail = () => {
                     }}
                   >
                     <img
-                      src={image}
+                      src={image || "/api/placeholder/800/500"}
                       alt={`${property.title} - Image ${index + 1}`}
                       className="w-full h-full object-cover scale-hover"
                     />
@@ -178,12 +210,12 @@ const PropertyDetail = () => {
               <div className="absolute top-6 right-6 bg-black/30 backdrop-blur-custom text-white px-5 py-3 rounded-2xl text-sm font-semibold border border-white/20 smooth-transition hover:bg-black/40">
                 <span className="text-primary font-bold text-lg">{currentImageIndex + 1}</span>
                 <span className="text-white/70 mx-1"> / </span>
-                <span className="text-white/90">{property.images.length}</span>
+                <span className="text-white/90">{allImages.length}</span>
               </div>
 
               {/* Progress Dots */}
               <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 opacity-0 group-hover:opacity-100 smooth-transition">
-                {property.images.map((_, index) => (
+                {allImages.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => goToImage(index)}
@@ -200,7 +232,7 @@ const PropertyDetail = () => {
 
             {/* Enhanced Thumbnail Navigation */}
             <div className="flex space-x-6 overflow-x-auto pb-6 scrollbar-hide px-2">
-              {property.images.map((image, index) => (
+              {allImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => goToImage(index)}
@@ -212,7 +244,7 @@ const PropertyDetail = () => {
                   }`}
                 >
                   <img
-                    src={image}
+                    src={image || "/api/placeholder/200/200"}
                     alt={`${property.title} - Thumbnail ${index + 1}`}
                     className="w-full h-full object-cover smooth-transition hover:scale-105"
                   />
@@ -240,7 +272,7 @@ const PropertyDetail = () => {
             {/* Image Title Overlay */}
             <div className="text-center mt-6">
               <h3 className="text-lg font-semibold text-foreground mb-2">
-                Image {currentImageIndex + 1} de {property.images.length}
+                Image {currentImageIndex + 1} de {allImages.length}
               </h3>
               <p className="text-muted-foreground">
                 {property.title} - Galerie Photos
@@ -280,11 +312,11 @@ const PropertyDetail = () => {
                   
                   <div className="flex items-center space-x-2 text-muted-foreground mb-6">
                     <MapPin className="w-5 h-5" />
-                    <span className="text-lg">{property.location}</span>
+                    <span className="text-lg">{property.location}, {property.city}</span>
                   </div>
-                  
+
                   <div className="text-3xl md:text-4xl font-bold text-primary">
-                    {formatPrice(property.price, property.currency)}
+                    {formatPrice(property.price)}
                   </div>
                 </div>
 
@@ -307,7 +339,7 @@ const PropertyDetail = () => {
                   </div>
                   <div className="text-center p-4 bg-card rounded-lg border">
                     <Building className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-foreground">{property.yearBuilt}</div>
+                    <div className="text-2xl font-bold text-foreground">{property.yearBuilt || 'N/A'}</div>
                     <div className="text-sm text-muted-foreground">Année</div>
                   </div>
                 </div>
@@ -316,7 +348,7 @@ const PropertyDetail = () => {
                 <div>
                   <h2 className="text-2xl font-playfair font-bold text-foreground mb-4">Description</h2>
                   <p className="text-lg text-muted-foreground leading-relaxed">
-                    {property.fullDescription}
+                    {property.description}
                   </p>
                 </div>
 
@@ -338,30 +370,23 @@ const PropertyDetail = () => {
 
               {/* Sidebar */}
               <div className="space-y-6">
-                {/* Contact Agent */}
+                {/* Contact */}
                 <Card className="shadow-lg">
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-bold text-foreground mb-4">Contacter l'Agent</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="font-semibold text-foreground">{property.agent.name}</div>
-                        <div className="text-sm text-muted-foreground">Agent Immobilier</div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <Button variant="luxury" className="w-full">
-                          <Phone className="w-4 h-4 mr-2" />
-                          {property.agent.phone}
-                        </Button>
-                        <Button variant="outline" className="w-full">
-                          <Mail className="w-4 h-4 mr-2" />
-                          Email
-                        </Button>
-                        <Button variant="elegant" className="w-full">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Planifier une visite
-                        </Button>
-                      </div>
+                    <h3 className="text-xl font-bold text-foreground mb-4">Nous Contacter</h3>
+                    <div className="space-y-3">
+                      <Button variant="luxury" className="w-full">
+                        <Phone className="w-4 h-4 mr-2" />
+                        +212 5XX XX XX XX
+                      </Button>
+                      <Button variant="outline" className="w-full">
+                        <Mail className="w-4 h-4 mr-2" />
+                        Email
+                      </Button>
+                      <Button variant="elegant" className="w-full">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Planifier une visite
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

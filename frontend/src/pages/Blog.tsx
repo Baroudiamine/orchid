@@ -1,9 +1,11 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiService, Article } from "@/services/api";
 import {
   Calendar,
   Clock,
@@ -14,95 +16,49 @@ import {
   Share2,
   TrendingUp,
   Home,
-  Building
+  Building,
+  FileText
 } from "lucide-react";
 
 const Blog = () => {
-  const blogPosts = [
-    {
-      id: 1,
-      title: "Luxury Real Estate Market Trends 2024",
-      excerpt: "Discover the latest trends shaping the luxury real estate market and what investors should know.",
-      author: "Sarah Johnson",
-      date: "March 15, 2024",
-      readTime: "5 min read",
-      views: "2.1k",
-      comments: 24,
-      category: "Market Analysis",
-      image: "/api/placeholder/400/250",
-      featured: true
-    },
-    {
-      id: 2,
-      title: "Investment Strategies for Premium Properties",
-      excerpt: "Learn proven strategies for maximizing returns on luxury property investments.",
-      author: "Michael Chen",
-      date: "March 12, 2024",
-      readTime: "7 min read",
-      views: "1.8k",
-      comments: 18,
-      category: "Investment",
-      image: "/api/placeholder/400/250"
-    },
-    {
-      id: 3,
-      title: "Orchid Island: A Paradise for Investors",
-      excerpt: "Explore why Orchid Island has become the premier destination for luxury real estate investment.",
-      author: "Emma Rodriguez",
-      date: "March 10, 2024",
-      readTime: "6 min read",
-      views: "3.2k",
-      comments: 35,
-      category: "Location Spotlight",
-      image: "/api/placeholder/400/250"
-    },
-    {
-      id: 4,
-      title: "Sustainable Luxury: Eco-Friendly Properties",
-      excerpt: "How sustainable design is revolutionizing the luxury real estate market.",
-      author: "David Park",
-      date: "March 8, 2024",
-      readTime: "4 min read",
-      views: "1.5k",
-      comments: 12,
-      category: "Sustainability",
-      image: "/api/placeholder/400/250"
-    },
-    {
-      id: 5,
-      title: "Technology in Modern Luxury Homes",
-      excerpt: "Smart home technology trends that are defining luxury living in 2024.",
-      author: "Lisa Wang",
-      date: "March 5, 2024",
-      readTime: "8 min read",
-      views: "2.7k",
-      comments: 28,
-      category: "Technology",
-      image: "/api/placeholder/400/250"
-    },
-    {
-      id: 6,
-      title: "Global Luxury Markets: Opportunities Abroad",
-      excerpt: "International luxury real estate markets offering exceptional investment potential.",
-      author: "James Thompson",
-      date: "March 3, 2024",
-      readTime: "6 min read",
-      views: "1.9k",
-      comments: 21,
-      category: "Global Markets",
-      image: "/api/placeholder/400/250"
-    }
-  ];
+  const [blogPosts, setBlogPosts] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("All Posts");
 
-  const categories = [
-    "All Posts",
-    "Market Analysis",
-    "Investment",
-    "Location Spotlight",
-    "Sustainability",
-    "Technology",
-    "Global Markets"
-  ];
+  useEffect(() => {
+    loadArticles();
+  }, []);
+
+  const loadArticles = async () => {
+    setIsLoading(true);
+    try {
+      const articles = await apiService.getAllArticles();
+      // Filtrer seulement les articles publiés pour le blog public
+      const publishedArticles = articles.filter(article => article.status === 'published');
+      setBlogPosts(publishedArticles);
+    } catch (error) {
+      console.error("Error loading articles:", error);
+      // En cas d'erreur, on peut garder un article par défaut ou afficher un message
+      setBlogPosts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Calculer le temps de lecture estimé
+  const calculateReadTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).length;
+    const readTime = Math.ceil(wordCount / wordsPerMinute);
+    return `${readTime} min read`;
+  };
+  // Générer les catégories dynamiquement à partir des articles
+  const categories = ["All Posts", ...Array.from(new Set(blogPosts.map(post => post.category)))];
+
+  // Filtrer les articles par catégorie
+  const filteredPosts = selectedCategory === "All Posts"
+    ? blogPosts
+    : blogPosts.filter(post => post.category === selectedCategory);
 
   return (
     <div className="min-h-screen">
@@ -134,9 +90,10 @@ const Blog = () => {
               {categories.map((category, index) => (
                 <Button
                   key={index}
-                  variant={index === 0 ? "luxury" : "outline"}
+                  variant={selectedCategory === category ? "luxury" : "outline"}
                   size="sm"
                   className="rounded-full"
+                  onClick={() => setSelectedCategory(category)}
                 >
                   {category}
                 </Button>
@@ -145,9 +102,36 @@ const Blog = () => {
           </div>
         </section>
 
-        {/* Featured Post */}
-        {blogPosts.filter(post => post.featured).map((post) => (
-          <section key={post.id} className="py-16 bg-background">
+        {/* Loading State */}
+        {isLoading ? (
+          <section className="py-16 bg-background">
+            <div className="container mx-auto px-6">
+              <div className="text-center mb-8">
+                <div className="h-6 bg-muted rounded w-32 mx-auto"></div>
+              </div>
+              <Card className="overflow-hidden animate-pulse">
+                <div className="grid md:grid-cols-2 gap-0">
+                  <div className="aspect-video md:aspect-auto bg-muted"></div>
+                  <CardContent className="p-8">
+                    <div className="h-6 bg-muted rounded mb-4 w-24"></div>
+                    <div className="h-8 bg-muted rounded mb-4 w-3/4"></div>
+                    <div className="h-4 bg-muted rounded mb-6 w-full"></div>
+                    <div className="flex space-x-4 mb-6">
+                      <div className="h-4 bg-muted rounded w-20"></div>
+                      <div className="h-4 bg-muted rounded w-24"></div>
+                      <div className="h-4 bg-muted rounded w-16"></div>
+                    </div>
+                    <div className="h-10 bg-muted rounded w-32"></div>
+                  </CardContent>
+                </div>
+              </Card>
+            </div>
+          </section>
+        ) : (
+          <>
+            {/* Featured Post */}
+            {filteredPosts.filter(post => post.featured).map((post) => (
+              <section key={post._id} className="py-16 bg-background">
             <div className="container mx-auto px-6">
               <div className="text-center mb-8">
                 <Badge variant="default" className="luxury-gradient text-primary-foreground">
@@ -180,14 +164,14 @@ const Blog = () => {
                       </div>
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-4 h-4" />
-                        <span>{post.date}</span>
+                        <span>{new Date(post.createdAt).toLocaleDateString('fr-FR')}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Clock className="w-4 h-4" />
-                        <span>{post.readTime}</span>
+                        <span>{calculateReadTime(post.content)}</span>
                       </div>
                     </div>
-                    <Link to={`/blog/${post.id}`}>
+                    <Link to={`/blog/${post._id}`}>
                       <Button variant="luxury" className="w-fit">
                         Read Full Article
                         <ArrowRight className="w-4 h-4 ml-2" />
@@ -213,8 +197,8 @@ const Blog = () => {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogPosts.filter(post => !post.featured).map((post) => (
-                <Link key={post.id} to={`/blog/${post.id}`}>
+              {filteredPosts.filter(post => !post.featured).map((post) => (
+                <Link key={post._id} to={`/blog/${post._id}`}>
                   <Card className="group hover:shadow-luxury transition-all duration-300 overflow-hidden h-full">
                     <div className="aspect-video overflow-hidden">
                       <img
@@ -241,7 +225,7 @@ const Blog = () => {
                       </div>
                       <div className="flex items-center space-x-1">
                         <Clock className="w-4 h-4" />
-                        <span>{post.readTime}</span>
+                        <span>{calculateReadTime(post.content)}</span>
                       </div>
                     </div>
 
@@ -249,11 +233,11 @@ const Blog = () => {
                       <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                         <div className="flex items-center space-x-1">
                           <Eye className="w-4 h-4" />
-                          <span>{post.views}</span>
+                          <span>{post.views || 0}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <MessageCircle className="w-4 h-4" />
-                          <span>{post.comments}</span>
+                          <span>{post.comments || 0}</span>
                         </div>
                       </div>
                       <Button variant="ghost" size="sm">
@@ -266,13 +250,30 @@ const Blog = () => {
               ))}
             </div>
 
-            <div className="text-center mt-12">
-              <Button variant="elegant" size="lg">
-                Load More Articles
-              </Button>
-            </div>
+            {/* Message si aucun article */}
+            {!isLoading && filteredPosts.length === 0 && (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">Aucun article disponible</h3>
+                <p className="text-muted-foreground">
+                  {selectedCategory === "All Posts"
+                    ? "Aucun article publié pour le moment."
+                    : `Aucun article dans la catégorie "${selectedCategory}".`}
+                </p>
+              </div>
+            )}
+
+            {!isLoading && filteredPosts.length > 6 && (
+              <div className="text-center mt-12">
+                <Button variant="elegant" size="lg">
+                  Load More Articles
+                </Button>
+              </div>
+            )}
           </div>
         </section>
+        </>
+        )}
       </main>
       <Footer />
     </div>

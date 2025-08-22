@@ -1,0 +1,11 @@
+{
+  "title": "Test Simple avec Image",
+  "excerpt": "Test simple pour debug",
+  "content": "Contenu de test simple",
+  "author": "Test",
+  "category": "Test",
+  "status": "published",
+  "featured": true,
+  "image": "https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=Test+Image",
+  "tags": ["test"]
+}

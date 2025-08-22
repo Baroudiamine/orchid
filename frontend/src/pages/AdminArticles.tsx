@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiService, Article } from "@/services/api";
 import {
   FileText,
   Plus,
@@ -22,61 +23,49 @@ const AdminArticles = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("adminLoggedIn");
     if (!isLoggedIn || isLoggedIn !== "true") {
       navigate("/admin");
+      return;
     }
+
+    loadArticles();
   }, [navigate]);
 
-  // Sample articles data
-  const [articles] = useState([
-    {
-      id: 1,
-      title: "Luxury Real Estate Market Trends 2024",
-      author: "Sarah Johnson",
-      date: "2024-03-15",
-      status: "published",
-      views: 2100,
-      category: "Market Analysis",
-      excerpt: "Discover the latest trends shaping the luxury real estate market..."
-    },
-    {
-      id: 2,
-      title: "Investment Strategies for Premium Properties",
-      author: "Michael Chen",
-      date: "2024-03-12",
-      status: "published",
-      views: 1800,
-      category: "Investment",
-      excerpt: "Learn proven strategies for maximizing returns on luxury property..."
-    },
-    {
-      id: 3,
-      title: "Orchid Island: A Paradise for Investors",
-      author: "Emma Rodriguez",
-      date: "2024-03-10",
-      status: "draft",
-      views: 0,
-      category: "Location Spotlight",
-      excerpt: "Explore why Orchid Island has become the premier destination..."
-    },
-    {
-      id: 4,
-      title: "Sustainable Luxury: Eco-Friendly Properties",
-      author: "David Park",
-      date: "2024-03-08",
-      status: "published",
-      views: 1500,
-      category: "Sustainability",
-      excerpt: "How sustainable design is revolutionizing the luxury real estate..."
+  const loadArticles = async () => {
+    setIsLoading(true);
+    try {
+      const articlesData = await apiService.getAllArticles();
+      setArticles(articlesData);
+      console.log("Articles chargés:", articlesData.map(a => ({ id: a._id, title: a.title })));
+    } catch (error) {
+      console.error("Error loading articles:", error);
+      alert(`Erreur lors du chargement des articles: ${(error as Error).message}`);
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  };
+
+  const handleDeleteArticle = async (articleId: string) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cet article ? Cette action est irréversible.")) {
+      try {
+        await apiService.deleteArticle(articleId);
+        alert("Article supprimé avec succès !");
+        loadArticles(); // Recharger la liste
+      } catch (error) {
+        console.error("Error deleting article:", error);
+        alert(`Erreur lors de la suppression de l'article: ${(error as Error).message}`);
+      }
+    }
+  };
 
   const filteredArticles = articles.filter(article => {
-    const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         article.author.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchText = `${article.title} ${article.author} ${article.category}`.toLowerCase();
+    const matchesSearch = searchText.includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === "all" || article.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
@@ -160,10 +149,37 @@ const AdminArticles = () => {
             </CardContent>
           </Card>
 
-          {/* Articles List */}
-          <div className="space-y-4">
+          {/* Loading State */}
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="h-6 bg-muted rounded mb-2 w-3/4"></div>
+                        <div className="h-4 bg-muted rounded mb-4 w-full"></div>
+                        <div className="flex space-x-4">
+                          <div className="h-4 bg-muted rounded w-20"></div>
+                          <div className="h-4 bg-muted rounded w-24"></div>
+                          <div className="h-4 bg-muted rounded w-16"></div>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <div className="h-8 w-8 bg-muted rounded"></div>
+                        <div className="h-8 w-8 bg-muted rounded"></div>
+                        <div className="h-8 w-8 bg-muted rounded"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            /* Articles List */
+            <div className="space-y-4">
             {filteredArticles.map((article) => (
-              <Card key={article.id} className="hover:shadow-luxury transition-all duration-300">
+              <Card key={article._id} className="hover:shadow-luxury transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -183,11 +199,11 @@ const AdminArticles = () => {
                         </div>
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-4 h-4" />
-                          <span>{new Date(article.date).toLocaleDateString('fr-FR')}</span>
+                          <span>{new Date(article.createdAt).toLocaleDateString('fr-FR')}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Eye className="w-4 h-4" />
-                          <span>{article.views.toLocaleString()} vues</span>
+                          <span>{article.views || 0} vues</span>
                         </div>
                         <Badge variant="outline" className="text-xs">
                           {article.category}
@@ -196,12 +212,12 @@ const AdminArticles = () => {
                     </div>
                     
                     <div className="flex items-center space-x-2 ml-4">
-                      <Link to={`/admin/articles/edit/${article.id}`}>
+                      <Link to={`/admin/articles/edit/${article._id}`}>
                         <Button variant="outline" size="sm">
                           <Edit className="w-4 h-4" />
                         </Button>
                       </Link>
-                      <Link to={`/blog/${article.id}`} target="_blank">
+                      <Link to={`/blog/${article._id}`} target="_blank">
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -209,7 +225,7 @@ const AdminArticles = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(article.id)}
+                        onClick={() => handleDeleteArticle(article._id)}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -219,9 +235,10 @@ const AdminArticles = () => {
                 </CardContent>
               </Card>
             ))}
-          </div>
+            </div>
+          )}
 
-          {filteredArticles.length === 0 && (
+          {!isLoading && filteredArticles.length === 0 && (
             <Card>
               <CardContent className="p-12 text-center">
                 <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
