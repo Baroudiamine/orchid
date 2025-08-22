@@ -146,7 +146,7 @@ const PropertyDetail = () => {
       <main>
         {/* Back Navigation */}
         <section className="py-6 bg-background border-b">
-          <div className="container mx-auto px-6">
+          <div className="font-lora container mx-auto px-6">
             <Link to="/properties" className="inline-flex items-center space-x-2 text-primary hover:text-primary/80 transition-colors">
               <ArrowLeft className="w-4 h-4" />
               <span>Retour aux propriétés</span>
@@ -271,8 +271,13 @@ const PropertyDetail = () => {
 
             {/* Image Title Overlay */}
             <div className="text-center mt-6">
+<<<<<<< HEAD
               <h3 className="text-lg font-semibold text-foreground mb-2">
                 Image {currentImageIndex + 1} de {allImages.length}
+=======
+              <h3 className="text-lg font-lora font-bold text-foreground mb-2">
+                Image {currentImageIndex + 1} de {property.images.length}
+>>>>>>> c77a2c4 (Initial commit)
               </h3>
               <p className="text-muted-foreground">
                 {property.title} - Galerie Photos
@@ -291,11 +296,11 @@ const PropertyDetail = () => {
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <Badge variant="default" className="luxury-gradient text-primary-foreground">
+                      <Badge variant="default" className="font-lora luxury-gradient text-primary-foreground">
                         {property.status}
                       </Badge>
                       {property.featured && (
-                        <Badge variant="outline" className="border-primary text-primary">
+                        <Badge variant="outline" className="font-lora border-primary text-primary">
                           <Star className="w-3 h-3 mr-1" />
                           Featured
                         </Badge>
@@ -310,36 +315,46 @@ const PropertyDetail = () => {
                     {property.title}
                   </h1>
                   
-                  <div className="flex items-center space-x-2 text-muted-foreground mb-6">
+                  <div className="font-lora flex items-center space-x-2 text-muted-foreground mb-6">
                     <MapPin className="w-5 h-5" />
                     <span className="text-lg">{property.location}, {property.city}</span>
                   </div>
+<<<<<<< HEAD
 
                   <div className="text-3xl md:text-4xl font-bold text-primary">
                     {formatPrice(property.price)}
+=======
+                  
+                  <div className="font-lora text-3xl md:text-4xl font-bold text-primary">
+                    {formatPrice(property.price, property.currency)}
+>>>>>>> c77a2c4 (Initial commit)
                   </div>
                 </div>
 
                 {/* Property Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="text-center p-4 bg-card rounded-lg border">
+                  <div className="font-lora text-center p-4 bg-card rounded-lg border">
                     <Bed className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-foreground">{property.bedrooms}</div>
+                    <div className="font-lora text-2xl font-bold text-foreground">{property.bedrooms}</div>
                     <div className="text-sm text-muted-foreground">Chambres</div>
                   </div>
-                  <div className="text-center p-4 bg-card rounded-lg border">
+                  <div className="font-lora text-center p-4 bg-card rounded-lg border">
                     <Bath className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-foreground">{property.bathrooms}</div>
+                    <div className="font-lora text-2xl font-bold text-foreground">{property.bathrooms}</div>
                     <div className="text-sm text-muted-foreground">Salles de bain</div>
                   </div>
-                  <div className="text-center p-4 bg-card rounded-lg border">
+                  <div className="font-lora text-center p-4 bg-card rounded-lg border">
                     <Square className="w-6 h-6 text-primary mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-foreground">{property.area}</div>
+                    <div className="font-lora text-2xl font-bold text-foreground">{property.area}</div>
                     <div className="text-sm text-muted-foreground">m²</div>
                   </div>
-                  <div className="text-center p-4 bg-card rounded-lg border">
+                  <div className="font-lora text-center p-4 bg-card rounded-lg border">
                     <Building className="w-6 h-6 text-primary mx-auto mb-2" />
+<<<<<<< HEAD
                     <div className="text-2xl font-bold text-foreground">{property.yearBuilt || 'N/A'}</div>
+=======
+                    <div className="font-lora text-2xl font-bold text-foreground">{property.yearBuilt}</div>
+>>>>>>> c77a2c4 (Initial commit)
                     <div className="text-sm text-muted-foreground">Année</div>
                   </div>
                 </div>
@@ -357,7 +372,7 @@ const PropertyDetail = () => {
                   <h2 className="text-2xl font-playfair font-bold text-foreground mb-6">Équipements et Services</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {property.amenities.map((amenity, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 bg-card rounded-lg border">
+                      <div key={index} className="font-lora flex items-center space-x-3 p-3 bg-card rounded-lg border">
                         <div className="w-8 h-8 luxury-gradient rounded-full flex items-center justify-center">
                           <Home className="w-4 h-4 text-white" />
                         </div>
@@ -373,6 +388,7 @@ const PropertyDetail = () => {
                 {/* Contact */}
                 <Card className="shadow-lg">
                   <CardContent className="p-6">
+<<<<<<< HEAD
                     <h3 className="text-xl font-bold text-foreground mb-4">Nous Contacter</h3>
                     <div className="space-y-3">
                       <Button variant="luxury" className="w-full">
@@ -387,6 +403,29 @@ const PropertyDetail = () => {
                         <Calendar className="w-4 h-4 mr-2" />
                         Planifier une visite
                       </Button>
+=======
+                    <h3 className="font-playfair text-xl font-bold text-foreground mb-4">Contacter l'Agent</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="font-lora font-semibold text-foreground">{property.agent.name}</div>
+                        <div className="font-lora  text-sm text-muted-foreground">Agent Immobilier</div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <Button variant="luxury" className="font-lora w-full">
+                          <Phone className="  w-4 h-4 mr-2" />
+                          {property.agent.phone}
+                        </Button>
+                        <Button variant="outline" className="font-lora w-full">
+                          <Mail className="w-4 h-4 mr-2" />
+                          Email
+                        </Button>
+                        <Button variant="elegant" className="font-lora w-full">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Planifier une visite
+                        </Button>
+                      </div>
+>>>>>>> c77a2c4 (Initial commit)
                     </div>
                   </CardContent>
                 </Card>
@@ -394,8 +433,8 @@ const PropertyDetail = () => {
                 {/* Property Info */}
                 <Card className="shadow-lg">
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-bold text-foreground mb-4">Informations</h3>
-                    <div className="space-y-3">
+                    <h3 className="font-playfair text-xl font-bold text-foreground mb-4">Informations</h3>
+                    <div className="font-lora space-y-3">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Type</span>
                         <span className="font-medium text-foreground">{property.type}</span>

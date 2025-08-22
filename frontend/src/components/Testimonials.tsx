@@ -66,12 +66,12 @@ const Testimonials = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center space-x-2 bg-ivory-white/20 backdrop-blur-sm rounded-full px-6 py-2 mb-6">
             <div className="w-2 h-2 luxury-gradient rounded-full"></div>
-            <span className="text-ivory-white font-inter text-sm font-medium">Témoignages</span>
+            <span className="text-ivory-white font-lora text-sm font-medium">Témoignages</span>
           </div>
           <h2 className="font-playfair text-4xl md:text-5xl font-bold text-ivory-white mb-6">
             Ce que disent nos <span className="luxury-gradient bg-clip-text text-transparent">Clients</span>
           </h2>
-          <p className="font-inter text-lg text-ivory-white/80 max-w-2xl mx-auto">
+          <p className="font-lora text-lg text-ivory-white/80 max-w-2xl mx-auto">
             La satisfaction de nos clients est notre plus belle récompense. 
             Découvrez leurs expériences avec Orchid Island.
           </p>
@@ -93,7 +93,7 @@ const Testimonials = () => {
                   testimonial.featured ? 'text-primary' : 'text-ivory-white/60'
                 }`} />
                 
-                <p className={`font-inter leading-relaxed mb-6 ${
+                <p className={`font-lora leading-relaxed mb-6 ${
                   testimonial.featured ? 'text-charcoal' : 'text-ivory-white/90'
                 }`}>
                   "{testimonial.content}"
@@ -111,12 +111,12 @@ const Testimonials = () => {
                   }`}>
                     {testimonial.name}
                   </h4>
-                  <p className={`font-inter text-sm ${
+                  <p className={`font-lora text-sm ${
                     testimonial.featured ? 'text-muted-foreground' : 'text-ivory-white/70'
                   }`}>
                     {testimonial.role}
                   </p>
-                  <p className={`font-inter text-xs ${
+                  <p className={`font-lora text-xs ${
                     testimonial.featured ? 'text-muted-foreground' : 'text-ivory-white/60'
                   }`}>
                     {testimonial.location}
@@ -138,15 +138,15 @@ const Testimonials = () => {
           <div className="inline-flex items-center space-x-8 bg-ivory-white/10 backdrop-blur-sm rounded-full px-8 py-4">
             <div className="flex items-center space-x-2">
               <Star className="w-5 h-5 text-primary fill-current" />
-              <span className="font-inter text-ivory-white font-medium">4.9/5</span>
+              <span className="font-lora text-ivory-white font-medium">4.9/5</span>
             </div>
             <div className="w-px h-6 bg-ivory-white/30"></div>
             <div className="flex items-center space-x-2">
-              <span className="font-inter text-ivory-white font-medium">200+ Avis Clients</span>
+              <span className="font-lora text-ivory-white font-medium">200+ Avis Clients</span>
             </div>
             <div className="w-px h-6 bg-ivory-white/30"></div>
             <div className="flex items-center space-x-2">
-              <span className="font-inter text-ivory-white font-medium">98% Recommandation</span>
+              <span className="font-lora text-ivory-white font-medium">98% Recommandation</span>
             </div>
           </div>
         </div>

@@ -17,7 +17,7 @@ const CookieSettings = () => {
       onClick={openCookieSettings}
       variant="ghost"
       size="sm"
-      className="text-ivory-white/70 hover:text-ivory-white"
+      className="font-lora text-ivory-white/70 hover:text-ivory-white"
     >
       <Cookie className="w-4 h-4 mr-2" />
       Paramètres des Cookies

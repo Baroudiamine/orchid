@@ -49,12 +49,12 @@ const Partners = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center space-x-2 bg-ivory-white/20 backdrop-blur-sm rounded-full px-6 py-2 mb-6">
             <div className="w-2 h-2 luxury-gradient rounded-full"></div>
-            <span className="text-foreground font-inter text-sm font-medium">Partenaires Stratégiques</span>
+            <span className="text-foreground font-lora text-sm font-medium">Partenaires Stratégiques</span>
           </div>
           <h2 className="font-playfair text-4xl md:text-5xl font-bold text-foreground mb-6">
             Nos <span className="luxury-gradient bg-clip-text text-transparent">Partenaires</span> de Prestige
           </h2>
-          <p className="font-inter text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="font-lora text-lg text-muted-foreground max-w-2xl mx-auto">
             Nous collaborons avec les leaders mondiaux de l'immobilier de luxe et les institutions financières 
             les plus prestigieuses pour vous offrir un service d'excellence.
           </p>
@@ -75,7 +75,7 @@ const Partners = () => {
               <h3 className="font-playfair text-xl font-semibold text-foreground mb-3">
                 {partner.name}
               </h3>
-              <p className="font-inter text-muted-foreground">
+              <p className="font-lora text-muted-foreground">
                 {partner.description}
               </p>
             </div>
@@ -85,34 +85,34 @@ const Partners = () => {
         {/* Stats Section */}
         <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div className="group">
-            <div className="font-playfair text-4xl font-bold text-primary mb-2 group-hover:scale-110 transition-luxury">
+            <div className="font-lora text-4xl font-bold text-primary mb-2 group-hover:scale-110 transition-luxury">
               50+
             </div>
-            <div className="font-inter text-muted-foreground">
+            <div className="font-lora text-muted-foreground">
               Partenaires Internationaux
             </div>
           </div>
           <div className="group">
-            <div className="font-playfair text-4xl font-bold text-primary mb-2 group-hover:scale-110 transition-luxury">
+            <div className="font-lora text-4xl font-bold text-primary mb-2 group-hover:scale-110 transition-luxury">
               15+
             </div>
-            <div className="font-inter text-muted-foreground">
+            <div className="font-lora text-muted-foreground">
               Années d'Expérience
             </div>
           </div>
           <div className="group">
-            <div className="font-playfair text-4xl font-bold text-primary mb-2 group-hover:scale-110 transition-luxury">
+            <div className="font-lora text-4xl font-bold text-primary mb-2 group-hover:scale-110 transition-luxury">
               500+
             </div>
-            <div className="font-inter text-muted-foreground">
+            <div className="font-lora text-muted-foreground">
               Propriétés Vendues
             </div>
           </div>
           <div className="group">
-            <div className="font-playfair text-4xl font-bold text-primary mb-2 group-hover:scale-110 transition-luxury">
+            <div className="font-lora text-4xl font-bold text-primary mb-2 group-hover:scale-110 transition-luxury">
               98%
             </div>
-            <div className="font-inter text-muted-foreground">
+            <div className="font-lora text-muted-foreground">
               Satisfaction Client
             </div>
           </div>

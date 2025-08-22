@@ -9,6 +9,7 @@ import Invest from "../pages/Invest";
 import Blog from "../pages/Blog";
 import ArticleDetail from "../pages/ArticleDetail";
 import Contact from "../pages/Contact";
+import Postulation from "../pages/Postulation";
 import AdminLogin from "../pages/AdminLogin";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminArticles from "../pages/AdminArticles";
@@ -88,6 +89,14 @@ const AnimatedRoutes = () => {
           element={
             <PageTransition>
               <Contact />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/postulation"
+          element={
+            <PageTransition>
+              <Postulation />
             </PageTransition>
           }
         />

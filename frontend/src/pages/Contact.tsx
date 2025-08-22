@@ -299,7 +299,7 @@ const Contact = () => {
                     onClick={() => setIsScheduleModalOpen(true)}
                   >
                     <Calendar className="w-5 h-5 mr-2" />
-                    Schedule a Meeting
+                    Planifier une visite
                   </Button>
                 </div>
               </div>

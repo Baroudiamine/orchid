@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
+
 import {
   Users,
   Award,
@@ -18,6 +20,8 @@ import {
 } from "lucide-react";
 
 const AboutUs = () => {
+  const navigate = useNavigate();
+
   const stats = [
     { number: "15+", label: "Années d'expérience", icon: Clock },
     { number: "1,200+", label: "Propriétés vendues", icon: Building },
@@ -176,7 +180,7 @@ const AboutUs = () => {
                 <div className="w-16 h-16 luxury-gradient rounded-full flex items-center justify-center mx-auto mb-4">
                   <stat.icon className="w-8 h-8 text-primary-foreground" />
                 </div>
-                <div className="font-playfair text-3xl font-bold text-foreground mb-2">
+                <div className="font-lora text-3xl font-bold text-foreground mb-2">
                   {stat.number}
                 </div>
                 <div className="font-inter text-muted-foreground text-sm">
@@ -272,7 +276,7 @@ const AboutUs = () => {
                   <h3 className="font-playfair text-xl font-semibold text-foreground mb-2">
                     {member.name}
                   </h3>
-                  <Badge className="bg-deep-blue text-ivory-white font-inter mb-3">
+                  <Badge className="bg-deep-blue text-ivory-white font-lora mb-3">
                     {member.role}
                   </Badge>
                   <p className="font-inter text-muted-foreground text-sm mb-2">
@@ -464,9 +468,16 @@ const AboutUs = () => {
             et découvrez comment nous pouvons vous aider à concrétiser vos ambitions immobilières.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="luxury" size="lg" className="font-playfair text-lg px-10 py-6 h-auto">
-              Nous Contacter
-            </Button>
+           <Button
+  variant="luxury"
+  size="lg"
+  className="font-playfair text-lg px-10 py-6 h-auto"
+  onClick={() => navigate("/contact")}
+>
+  Nous Contacter
+</Button>
+
+
             <Button variant="elegant" size="lg" className="font-playfair text-lg px-10 py-6 h-auto">
               Voir Nos Propriétés
             </Button>

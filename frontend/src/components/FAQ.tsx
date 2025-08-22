@@ -41,12 +41,12 @@ const FAQ = () => {
         <div className="text-center mb-16">
           <div className="inline-flex items-center space-x-2 bg-primary/10 backdrop-blur-sm rounded-full px-6 py-2 mb-6">
             <div className="w-2 h-2 luxury-gradient rounded-full"></div>
-            <span className="text-foreground font-inter text-sm font-medium">Questions Fréquentes</span>
+            <span className="text-foreground font-lora text-sm font-medium">Questions Fréquentes</span>
           </div>
           <h2 className="font-playfair text-4xl md:text-5xl font-bold text-foreground mb-6">
             Foire aux <span className="luxury-gradient bg-clip-text text-transparent">Questions</span>
           </h2>
-          <p className="font-inter text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="font-lora text-lg text-muted-foreground max-w-2xl mx-auto">
             Retrouvez les réponses aux questions les plus fréquemment posées sur nos services 
             et notre expertise en immobilier de luxe.
           </p>
@@ -64,7 +64,7 @@ const FAQ = () => {
                 <AccordionTrigger className="text-left font-playfair text-lg font-semibold text-foreground hover:no-underline py-6">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="font-inter text-muted-foreground leading-relaxed pb-6">
+                <AccordionContent className="font-lora text-muted-foreground leading-relaxed pb-6">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -78,13 +78,21 @@ const FAQ = () => {
             <h3 className="font-playfair text-2xl font-bold text-foreground mb-4">
               Une question spécifique ?
             </h3>
-            <p className="font-inter text-muted-foreground mb-6">
+            <p className="font-lora text-muted-foreground mb-6">
               Notre équipe d'experts est à votre disposition pour répondre à toutes vos questions 
               personnalisées sur l'immobilier de luxe au Maroc.
             </p>
+<<<<<<< HEAD
             <button className="bg-primary hover:bg-primary/90 text-primary-foreground font-inter font-medium px-8 py-3 rounded-lg shadow-luxury hover:shadow-elegant transition-luxury">
               Nous Contacter
             </button>
+=======
+            <Link to="/contact">
+              <button className="bg-primary hover:bg-primary/90 text-primary-foreground font-playfair font-medium px-8 py-3 rounded-lg shadow-luxury hover:shadow-elegant transition-luxury">
+                Nous Contacter
+              </button>
+            </Link>
+>>>>>>> c77a2c4 (Initial commit)
           </div>
         </div>
       </div>
