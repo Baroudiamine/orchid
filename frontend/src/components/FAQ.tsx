@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const faqData = [
@@ -82,17 +83,11 @@ const FAQ = () => {
               Notre équipe d'experts est à votre disposition pour répondre à toutes vos questions 
               personnalisées sur l'immobilier de luxe au Maroc.
             </p>
-<<<<<<< HEAD
-            <button className="bg-primary hover:bg-primary/90 text-primary-foreground font-inter font-medium px-8 py-3 rounded-lg shadow-luxury hover:shadow-elegant transition-luxury">
-              Nous Contacter
-            </button>
-=======
             <Link to="/contact">
               <button className="bg-primary hover:bg-primary/90 text-primary-foreground font-playfair font-medium px-8 py-3 rounded-lg shadow-luxury hover:shadow-elegant transition-luxury">
                 Nous Contacter
               </button>
             </Link>
->>>>>>> c77a2c4 (Initial commit)
           </div>
         </div>
       </div>
